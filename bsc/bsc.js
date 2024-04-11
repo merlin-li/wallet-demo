@@ -3,13 +3,15 @@ const abi = require('./abi');
 
 // 使用正确的 RPC URL
 const BSC_RPC_URL = 'https://bsc-testnet.drpc.org/';
+// const BSC_RPC_URL_PRO = 'https://bsc.drpc.org';
 const usdtABI = abi.USDTAbi;
 const usdtAddress = '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd';
 const web3 = new Web3(new Web3.providers.HttpProvider(BSC_RPC_URL));
 const usdtContract = new web3.eth.Contract(usdtABI, usdtAddress);
 const fromAddress = '';
-const toAddress = '';
+const toAddress = '0xEbd84C1dbc01bb87cC58064C3748E1D3cBeD6B64';
 const toAddressKey = '';
+const userAddress = toAddress.toLowerCase();
 
 // 查询 bnb 余额
 const fetchBNBBalance = async (address) => {
@@ -67,11 +69,44 @@ const sendUSDT = async ({from, to, amount}) => {
   console.log(`Transaction hash:${receipt.transactionHash}`);
 };
 
+// 监听充值
+const handleListender = () => {
+  const web3eth = new Web3('wss://bsc-testnet.drpc.org');
+  const theUsdtContract = new web3eth.eth.Contract(usdtABI, usdtAddress);
+
+  // web3eth.eth.subscribe('newBlockHeaders', (error, result) => {
+  //   if (!error) {
+  //     console.log('New block received. Block #', result.number);
+  //     return;
+  //   }
+  //   console.error(error);
+  // });
+
+  console.log(userAddress)
+  try {
+    theUsdtContract.events.Transfer({
+      filter: { to: userAddress },
+      fromBlock: 'latest'
+    })
+    .on('data', event => {
+      console.log('检测到充值：');
+      console.log(`从${event.returnValues.from}到 ${event.returnValues.to}`);
+      console.log(`数额${web3.utils.fromWei(event.returnValues.value, 'ether')} USDT`);
+    })
+    .on('error', e => {
+      console.log(e);
+    });
+  } catch(err) {
+    console.log(err);
+  }
+};
+
 const main = async () => {
-  await fetchBNBBalance(fromAddress);
-  await fetchUSDTBalance(fromAddress);
-  await sendBNB({ from: toAddress, to: fromAddress, amount: 0.02222 });
-  await sendUSDT({ from: toAddress, to: fromAddress, amount: 0.44444 });
+  handleListender();
+  // await fetchBNBBalance(fromAddress);
+  // await fetchUSDTBalance(fromAddress);
+  // await sendBNB({ from: toAddress, to: fromAddress, amount: 0.02222 });
+  // await sendUSDT({ from: toAddress, to: fromAddress, amount: 0.44444 });
 };
 
 main();
