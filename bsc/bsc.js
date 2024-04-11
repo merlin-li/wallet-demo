@@ -82,23 +82,30 @@ const handleListender = () => {
   //   console.error(error);
   // });
 
-  console.log(userAddress)
-  try {
-    theUsdtContract.events.Transfer({
-      filter: { to: userAddress },
-      fromBlock: 'latest'
-    })
-    .on('data', event => {
-      console.log('检测到充值：');
-      console.log(`从${event.returnValues.from}到 ${event.returnValues.to}`);
-      console.log(`数额${web3.utils.fromWei(event.returnValues.value, 'ether')} USDT`);
-    })
-    .on('error', e => {
-      console.log(e);
-    });
-  } catch(err) {
-    console.log(err);
-  }
+  // theUsdtContract.events.Transfer({
+  //   filter: {to: userAddress},
+  //   fromBlock: 'latest'
+  // })
+  // .on('data', event => {
+  //     console.log(`检测到充值：`);
+  //     console.log(`从 ${event.returnValues.from} 到 ${event.returnValues.to}`);
+  //     console.log(`数额：${web3.utils.fromWei(event.returnValues.value, 'ether')} USDT`);
+  // })
+  // .on('error', console.error);
+
+  theUsdtContract.getPastEvents('Transfer', {
+      filter: {myIndexedParam: [20,23], myOtherIndexedParam: '0x123456789...'}, // Using an array means OR: e.g. 20 or 23
+      fromBlock: 0,
+      toBlock: 'latest'
+  }, function(error, events){ console.log(events); })
+  .then(function(events){
+      console.log(events) // same results as the optional callback above
+  });
+
+  // theUsdtContract.events.Transfer({}, {
+  //   fromBlock: 0,
+  //   toBlock: 'latest',
+  // }, async (error, event) => {});
 };
 
 const main = async () => {
